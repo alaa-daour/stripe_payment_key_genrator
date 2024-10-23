@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Generate Payment Data</title>
+  <script src="https://js.stripe.com/v3/"></script>
+</head>
+<body>
+  <h2>Generate Payment Data</h2>
+
+  <form id="payment-form">
+    <label for="type">Select Type:</label>
+    <select id="type" name="type" required>
+      <option value="payment_intent">Payment Intent</option>
+      <option value="payment_method">Payment Method</option>
+    </select><br /><br />
+
+    <label for="amount">Amount (in cents):</label>
+    <input type="number" id="amount" name="amount" required /><br /><br />
+
+    <label for="currency">Currency:</label>
+    <input type="text" id="currency" name="currency" value="usd" required /><br /><br />
+
+    <label for="count">How Many?</label>
+    <input type="number" id="count" name="count" required min="1" /><br /><br />
+
+    <button type="submit">Generate</button>
+  </form>
+
+  <div id="result-container"></div>
+
+  <script>
+    document.getElementById('payment-form').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const type = document.getElementById('type').value;
+      const amount = document.getElementById('amount').value;
+      const currency = document.getElementById('currency').value;
+      const count = parseInt(document.getElementById('count').value, 10);
+
+      try {
+        const response = await fetch('/generate', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ type, amount, currency, count }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to generate data');
+        }
+
+        const { results } = await response.json();
+        const resultContainer = document.getElementById('result-container');
+        resultContainer.innerHTML = ''; // Clear previous results
+
+        results.forEach((result, index) => {
+          const resultElement = document.createElement('div');
+          resultElement.textContent = `${type === 'payment_intent' ? 'Intent' : 'Method'} #${index + 1}: ${result}`;
+          resultContainer.appendChild(resultElement);
+        });
+      } catch (error) {
+        console.error('Error:', error);
+        alert('Failed to generate data. Please try again.');
+      }
+    });
+  </script>
+</body>
+</html>
